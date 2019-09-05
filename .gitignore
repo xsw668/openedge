@@ -4,10 +4,11 @@
 *.jar
 *.iml
 /.idea
-/output*
-/**/.DS_Store
 /.vscode
-/**/var
+/output*
+/baetyl
+/**/*.zip
+/**/.DS_Store
 /**/libexec
 /**/*.db
 /**/*.db.lock
@@ -16,3 +17,6 @@
 /**/debug
 /**/*.log
 /cover*.out
+/example/**/*-cert
+/**/processes.history*
+/**/node_modules

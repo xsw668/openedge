@@ -1,33 +1,65 @@
-# OpenEdge
+# Baetyl
 
-OpenEdge是开放的边缘计算平台，可将云计算能力拓展至用户现场，提供临时离线、低延时的计算服务，包括消息路由、函数计算、AI推断等。OpenEdge和[云端管理套件](https://cloud.baidu.com/product/bie.html)配合使用，可达到云端管理和应用下发，边缘设备上运行应用的效果，满足各种边缘计算场景。
+[![Baetyl Status](https://travis-ci.com/baidu/baetyl.svg?branch=master)](https://travis-ci.com/baidu/baetyl)  [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://baetyl.io/en)    [![Release](https://img.shields.io/github/v/release/baetyl/baetyl?color=blue&include_prereleases&label=pre-release)](https://github.com/baetyl/baetyl/releases)    [![License](https://img.shields.io/github/license/baetyl/baetyl?color=blue)](LICENSE) [![Stars](https://img.shields.io/github/stars/baetyl/baetyl?style=social)](Stars)
 
-**功能列表**：
+![Baetyl-logo](./doc/images/logo/logo-with-name.png)
 
-> + 支持应用模块的管理，包括启停、重启、监听、守护和升级
-> + 支持两种运行模式：Native进程模式和Docker容器模式
-> + Docker容器模式支持资源隔离和资源限制
-> + 支持云端管理套件，可以进行应用下发，设备信息上报等
-> + 官方提供Hub模块，支持MQTT 3.1.1，支持QoS等级0和1，支持证书认证等
-> + 官方提供函数计算模块，支持函数实例伸缩，支持SQL、Python2.7、AI推断等Runtime以及自定义Runtime
-> + 官方提供远程服务通讯模块，支持MQTT协议
-> + 官方提供视频流接入模块，支持RTMP
-> + 提供模块SDK(Golang)，可用于开发自定义模块
+[README 中文版](./README-CN.md)
 
-**设计文档**：
+**[Baetyl](https://baetyl.io) is an open edge computing framework that extends cloud computing, data and service seamlessly to edge devices.** It can provide temporary offline, low-latency computing services, and include device connect, message routing, remote synchronization, function computing, video access pre-processing, AI inference, etc. The combination of Baetyl and the **Cloud Management Suite** of [BIE](https://cloud.baidu.com/product/bie.html)(Baidu IntelliEdge) will achieve cloud management and application distribution, enable applications running on edge devices and meet all kinds of edge computing scenario.
 
-> + [OpenEdge设计](./doc/zh-cn/about/design/OpenEdge-overall-design.md)
-> + [所有配置解读](./doc/zh-cn/config/config.md)
-> + [开发自定义模块](./doc/zh-cn/develop/extension/dev_module.md)
+## Advantages
 
-## 快速开始
+- **Shielding Computing Framework**: Baetyl provides two official computing modules(**Local Function Module** and **Python Runtime Module**), also supports customize module(which can be written in any programming language or any machine learning framework).
+- **Simplified Application Production**: Baetyl combines with **Cloud Management Suite** of BIE and many other productions of Baidu Cloud(such as [CFC](https://cloud.baidu.com/product/cfc.html), [Infinite](https://cloud.baidu.com/product/infinite.html), [Jarvis](http://di.baidu.com/product/jarvis), [IoT EasyInsight](https://cloud.baidu.com/product/ist.html), [TSDB](https://cloud.baidu.com/product/tsdb.html), [IoT Visualization](https://cloud.baidu.com/product/iotviz.html)) to provide data calculation, storage, visible display, model training and many more abilities.
+- **Quickly Deployment**: Baetyl pursues docker container mode, it make developers quickly deploy Baetyl on different operating system.
+- **Deploy On Demand**: Baetyl takes modularization mode and splits functions to multiple independent modules. Developers can select some modules which they need to deploy.
+- **Rich Configuration**: Baetyl supports X86 and ARM CPU processors, as well as Linux, Darwin and Windows operating systems.
 
-> + [Linux环境](./doc/zh-cn/install/Build-OpenEdge-on-Linux.md)
+## Components
 
-## 测试
+As an edge computing platform, **Baetyl** not only provides features such as underlying service management, but also provides some basic functional modules, as follows:
 
-    go test --race ./...
+- Baetyl [Master](./doc/us-en/overview/Design.md#master) is responsible for the management of service instances, such as start, stop, supervise, etc., consisting of Engine, API, Command Line. And supports two modes of running service: **native** process mode and **docker** container mode
+- The official module [baetyl-agent](./doc/us-en/overview/Design.md#baetyl-agent) is responsible for communication with the BIE cloud management suite, which can be used for application delivery, device information reporting, etc. Mandatory certificate authentication to ensure transmission security;
+- The official module [baetyl-hub](./doc/us-en/overview/Design.md#baetyl-hub) provides message subscription and publishing functions based on the [MQTT protocol](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html), and supports four access methods: TCP, SSL, WS, and WSS;
+- The official module [baetyl-remote-mqtt](./doc/us-en/overview/Design.md#baetyl-remote-mqtt) is used to bridge two MQTT Servers for message synchronization and supports configuration of multiple message route rules. ;
+- The official module [baetyl-function-manager](./doc/us-en/overview/Design.md#baetyl-function-manager) provides computing power based on MQTT message mechanism, flexible, high availability, good scalability, and fast response;
+- The official module [baetyl-function-python27](./doc/us-en/overview/Design.md#baetyl-function-python27) provides the Python2.7 function runtime, which can be dynamically started by `baetyl-function-manager`;
+- The official module [baetyl-function-python36](./doc/us-en/overview/Design.md#baetyl-function-python36) provides the Python3.6 function runtime, which can be dynamically started by `baetyl-function-manager`;
+- The official module [baetyl-function-node85](./doc/us-en/overview/Design.md#baetyl-function-node85) provides the Node 8.5 function runtime, which can be dynamically started by `baetyl-function-manager`;
+- SDK (Golang) can be used to develop custom modules.
 
-## 如何贡献
+### Architecture
 
-## 讨论
+![Architecture](./doc/images/overview/design/design_overview.png)
+
+## Installation
+
+- [Quick Install Baetyl](./doc/us-en/setup/Quick-Install.md)
+- [Build Baetyl From Source](./doc/us-en/setup/Build-from-Source.md)
+
+## Documents
+
+- [Baetyl design](./doc/us-en/overview/Design.md)
+- [Baetyl config interpretation](./doc/us-en/tutorials/Config-interpretation.md)
+- [How to write Python script for Python runtime](./doc/us-en/customize/How-to-write-a-python-script-for-python-runtime.md)
+- [How to write Node script for Node runtime](./doc/us-en/customize/How-to-write-a-node-script-for-node-runtime.md)
+- [How to import third-party libraries for Python runtime](./doc/us-en/customize/How-to-import-third-party-libraries-for-python-runtime.md)
+- [How to import third-party libraries for Node runtime](./doc/us-en/customize/How-to-import-third-party-libraries-for-node-runtime.md)
+- [How to develop a customize runtime for function](./doc/us-en/customize/How-to-develop-a-customize-runtime-for-function.md)
+- [How to develop a customize module for Baetyl](./doc/us-en/customize/How-to-develop-a-customize-module.md)
+
+## Contributing
+
+If you are passionate about contributing to open source community, Baetyl will provide you with both code contributions and document contributions. More details, please see: [How to contribute code or document to Baetyl](./CONTRIBUTING.md).
+
+## Discussion
+
+As the first open edge computing framework in China, Baetyl aims to create a lightweight, secure, reliable and scalable edge computing community that will create a good ecological environment. Here, we offer the following options for you to choose from:
+
+- If you want to participate in Baetyl's daily development communication, you are welcome to join [Wechat-for-Baetyl](https://baetyl.bj.bcebos.com/Wechat/Wechat-Baetyl.png)
+- If you have more about feature requirements or bug feedback of Baetyl, please [Submit an issue](https://github.com/baetyl/baetyl/issues)
+- If you want to know more about Baetyl and other services of Baidu Cloud, please visit [Baidu-Cloud-forum](https://cloud.baidu.com/forum/bce)
+- If you want to know more about Cloud Management Suite of BIE, please visit: [Baidu-IntelliEdge](https://cloud.baidu.com/product/bie.html)
+- If you have better development advice about Baetyl, please contact us: <baetyl@lists.lfedge.org>

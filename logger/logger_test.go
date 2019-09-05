@@ -1,14 +1,13 @@
-package logger_test
+package logger
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/baidu/openedge/logger"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewEntry(t *testing.T) {
+func TestInitLogger(t *testing.T) {
 	type args struct {
 		vs []string
 	}
@@ -48,9 +47,10 @@ func TestNewEntry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := logger.WithFields(tt.args.vs...); !reflect.DeepEqual(got.Data, tt.want) {
-				t.Errorf("NewEntry() = %v, want %v", got.Data, tt.want)
-			}
+			l := InitLogger(LogInfo{
+				Level: "debug",
+			}, tt.args.vs...)
+			assert.EqualValues(t, l.(*logger).entry.Data, tt.want)
 		})
 	}
 }

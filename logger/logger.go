@@ -1,141 +1,137 @@
 package logger
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
-	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
-// var mutex sync.Mutex
-var root = logrus.NewEntry(logrus.New())
+// Logger of module
+type Logger interface {
+	WithField(key string, value interface{}) Logger
+	WithError(err error) Logger
+	Debugf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
+	Debugln(args ...interface{})
+	Infoln(args ...interface{})
+	Warnln(args ...interface{})
+	Errorln(args ...interface{})
+	Fatalln(args ...interface{})
+}
 
-// Init init logger
-func Init(c Config, fields ...string) error {
-	// mutex.Lock()
-	// defer mutex.Unlock()
+type logger struct {
+	entry *logrus.Entry
+}
 
-	var logOutWriter io.Writer
-	if c.Console == true {
-		logOutWriter = os.Stdout
-	} else {
-		logOutWriter = ioutil.Discard
-	}
+func (l *logger) WithField(key string, value interface{}) Logger {
+	return &logger{l.entry.WithField(key, value)}
+}
+
+func (l *logger) WithError(err error) Logger {
+	return &logger{l.entry.WithError(err)}
+}
+
+func (l *logger) Debugf(format string, args ...interface{}) {
+	l.entry.Debugf(format, args...)
+}
+
+func (l *logger) Infof(format string, args ...interface{}) {
+	l.entry.Infof(format, args...)
+}
+
+func (l *logger) Warnf(format string, args ...interface{}) {
+	l.entry.Warnf(format, args...)
+}
+
+func (l *logger) Errorf(format string, args ...interface{}) {
+	l.entry.Errorf(format, args...)
+}
+
+func (l *logger) Fatalf(format string, args ...interface{}) {
+	l.entry.Fatalf(format, args...)
+}
+
+func (l *logger) Debugln(args ...interface{}) {
+	l.entry.Debugln(args...)
+}
+
+func (l *logger) Infoln(args ...interface{}) {
+	l.entry.Infoln(args...)
+}
+
+func (l *logger) Warnln(args ...interface{}) {
+	l.entry.Warnln(args...)
+}
+
+func (l *logger) Errorln(args ...interface{}) {
+	l.entry.Errorln(args...)
+}
+
+func (l *logger) Fatalln(args ...interface{}) {
+	l.entry.Fatalln(args...)
+}
+
+// New create a new logger
+func New(c LogInfo, fields ...string) Logger {
 	logLevel, err := logrus.ParseLevel(c.Level)
 	if err != nil {
-		logLevel = logrus.DebugLevel
+		fmt.Fprintf(os.Stderr, "failed to parse log level (%s), use default level (info)", c.Level)
+		logLevel = logrus.InfoLevel
 	}
 
 	var fileHook logrus.Hook
-	if len(c.Path) != 0 {
-		err := os.MkdirAll(filepath.Dir(c.Path), 0755)
+	if c.Path != "" {
+		err = os.MkdirAll(filepath.Dir(c.Path), 0755)
 		if err != nil {
-			return errors.Trace(err)
-		}
-		fileHook, err = newFileHook(fileConfig{
-			Filename:   c.Path,
-			Formatter:  newFormatter(c.Format, false),
-			Level:      logLevel,
-			MaxAge:     c.Age.Max,  //days
-			MaxSize:    c.Size.Max, // megabytes
-			MaxBackups: c.Backup.Max,
-			Compress:   true,
-		})
-		if err != nil {
-			return errors.Trace(err)
+			fmt.Fprintf(os.Stderr, "failed to create log directory: %s", err.Error())
+		} else {
+			fileHook, err = newFileHook(fileConfig{
+				Filename:   c.Path,
+				Formatter:  newFormatter(c.Format),
+				Level:      logLevel,
+				MaxAge:     c.Age.Max,  //days
+				MaxSize:    c.Size.Max, // megabytes
+				MaxBackups: c.Backup.Max,
+				Compress:   true,
+			})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to create log file hook: %s", err.Error())
+			}
 		}
 	}
 
-	root = WithFields(fields...)
-	root.Logger.Level = logLevel
-	root.Logger.Out = logOutWriter
-	root.Logger.Formatter = newFormatter(c.Format, true)
+	entry := logrus.NewEntry(logrus.New())
+	entry.Level = logLevel
+	entry.Logger.Level = logLevel
+	entry.Logger.Formatter = newFormatter(c.Format)
 	if fileHook != nil {
-		root.Logger.Hooks.Add(fileHook)
+		entry.Logger.Hooks.Add(fileHook)
 	}
-	return nil
-}
-
-// WithFields adds a map of fields to the Entry.
-func WithFields(vs ...string) *logrus.Entry {
-	// mutex.Lock()
-	// defer mutex.Unlock()
-	fs := logrus.Fields{}
-	for index := 0; index < len(vs)-1; index = index + 2 {
-		fs[vs[index]] = vs[index+1]
+	if logLevel == logrus.DebugLevel {
+		entry.Logger.Out = os.Stdout
+	} else {
+		entry.Logger.Out = ioutil.Discard
 	}
-	return root.WithFields(fs)
+	logrusFields := logrus.Fields{}
+	for index := 0; index < len(fields)-1; index = index + 2 {
+		logrusFields[fields[index]] = fields[index+1]
+	}
+	return &logger{entry.WithFields(logrusFields)}
 }
 
-// WithError adds an error as single field (using the key defined in ErrorKey) to the Entry.
-func WithError(err error) *logrus.Entry {
-	return root.WithError(err)
-}
-
-// Debug log debug info
-func Debug(args ...interface{}) {
-	root.Debug(args...)
-}
-
-// Info log info
-func Info(args ...interface{}) {
-	root.Info(args...)
-}
-
-// Warn log warning info
-func Warn(args ...interface{}) {
-	root.Warn(args...)
-}
-
-// Error log error info
-func Error(args ...interface{}) {
-	root.Error(args...)
-}
-
-// Debugf log debug info
-func Debugf(format string, args ...interface{}) {
-	root.Debugf(format, args...)
-}
-
-// Infof log info
-func Infof(format string, args ...interface{}) {
-	root.Infof(format, args...)
-}
-
-// Warnf log warning info
-func Warnf(format string, args ...interface{}) {
-	root.Warnf(format, args...)
-}
-
-// Errorf log error info
-func Errorf(format string, args ...interface{}) {
-	root.Errorf(format, args...)
-}
-
-// Debugln log debug info
-func Debugln(args ...interface{}) {
-	root.Debugln(args...)
-}
-
-// Infoln log info
-func Infoln(args ...interface{}) {
-	root.Infoln(args...)
-}
-
-// Warnln log warning info
-func Warnln(args ...interface{}) {
-	root.Warnln(args...)
-}
-
-// Errorln log error info
-func Errorln(args ...interface{}) {
-	root.Errorln(args...)
+// InitLogger init global logger
+func InitLogger(c LogInfo, fields ...string) Logger {
+	Global = New(c, fields...)
+	return Global
 }
 
 type fileConfig struct {
@@ -199,21 +195,18 @@ func (hook *fileHook) Fire(entry *logrus.Entry) (err error) {
 	}
 	b, err := hook.config.Formatter.Format(entry)
 	if err != nil {
-		return errors.Trace(err)
+		return err
 	}
 	hook.writer.Write(b)
 	return nil
 }
 
-func newFormatter(format string, color bool) logrus.Formatter {
+func newFormatter(format string) logrus.Formatter {
 	var formatter logrus.Formatter
 	if strings.ToLower(format) == "json" {
 		formatter = &logrus.JSONFormatter{}
 	} else {
-		if runtime.GOOS == "windows" {
-			color = false
-		}
-		formatter = &logrus.TextFormatter{FullTimestamp: true, DisableColors: !color}
+		formatter = &logrus.TextFormatter{FullTimestamp: true, DisableColors: true}
 	}
 	return formatter
 }

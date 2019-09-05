@@ -2,8 +2,8 @@ package utils
 
 import "net"
 
-// GetPortAvailable finds an available port
-func GetPortAvailable(host string) (int, error) {
+// GetAvailablePort finds an available port
+func GetAvailablePort(host string) (int, error) {
 	address, err := net.ResolveTCPAddr("tcp", host+":0")
 	if err != nil {
 		return 0, err
